@@ -1,0 +1,3254 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Portofolio Evan Bhagaskara (@Evknzz) — Software Engineering & Systems Architecture | D-IV TRPL Politeknik Negeri Madiun." />
+  <title>Evan Bhagaskara (@Evknzz) — Spatial Liquid Glass Portfolio</title>
+
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ==========================================================================
+       1. DESIGN TOKENS & LIQUID GLASS VARIABLES
+       ========================================================================== */
+    :root {
+      --bg-canvas: #05070e;
+      --bg-elevated: rgba(12, 18, 34, 0.58);
+      --glass-blur: 24px;
+      --glass-brightness: 100%;
+      --blob-speed: 22s;
+
+      --accent-primary: #38bdf8;
+      --accent-secondary: #818cf8;
+      --accent-tertiary: #2dd4bf;
+      --accent-rgb: 56, 189, 248;
+      --accent-sec-rgb: 129, 140, 248;
+
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+
+      --border-specular: rgba(255, 255, 255, 0.26);
+      --border-subtle: rgba(255, 255, 255, 0.11);
+
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --spring: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* Glass Refraction Atmosphere Presets */
+    html[data-glass-theme="emerald"] {
+      --accent-primary: #34d399;
+      --accent-secondary: #2dd4bf;
+      --accent-tertiary: #38bdf8;
+      --accent-rgb: 52, 211, 153;
+      --accent-sec-rgb: 45, 212, 191;
+    }
+
+    html[data-glass-theme="violet"] {
+      --accent-primary: #c084fc;
+      --accent-secondary: #f472b6;
+      --accent-tertiary: #818cf8;
+      --accent-rgb: 192, 132, 252;
+      --accent-sec-rgb: 244, 114, 182;
+    }
+
+    html[data-glass-theme="sunset"] {
+      --accent-primary: #fb923c;
+      --accent-secondary: #a855f7;
+      --accent-tertiary: #38bdf8;
+      --accent-rgb: 251, 146, 60;
+      --accent-sec-rgb: 168, 85, 247;
+    }
+
+    /* Accessibility Modes: High Contrast & Reduce Motion */
+    html.high-contrast {
+      --bg-canvas: #02040a;
+      --text-primary: #ffffff;
+      --text-secondary: #f1f5f9;
+      --text-muted: #cbd5e1;
+      --border-subtle: rgba(255, 255, 255, 0.32);
+      --border-specular: rgba(255, 255, 255, 0.58);
+    }
+
+    html.high-contrast .liquid-glass {
+      background: linear-gradient(
+        145deg,
+        rgba(15, 23, 42, 0.88) 0%,
+        rgba(9, 14, 28, 0.84) 100%
+      );
+    }
+
+    html.high-contrast .liquid-pill {
+      background: rgba(8, 13, 28, 0.92);
+      border-color: rgba(255, 255, 255, 0.36);
+    }
+
+    html.reduce-motion *,
+    html.reduce-motion *::before,
+    html.reduce-motion *::after {
+      animation: none !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+
+    /* ==========================================================================
+       2. RESET & BASE LAYOUT
+       ========================================================================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background-color: var(--bg-canvas);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      overflow-x: hidden;
+    }
+
+    body {
+      min-height: 100vh;
+      background-color: var(--bg-canvas);
+      color: var(--text-primary);
+      line-height: 1.65;
+      overflow-x: hidden;
+      position: relative;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button {
+      font-family: inherit;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 0 20px;
+      position: relative;
+      z-index: 2;
+    }
+
+    @media (min-width: 768px) {
+      .container {
+        padding: 0 32px;
+      }
+    }
+
+    /* ==========================================================================
+       3. LIQUID AMBIENT BACKGROUND BLOBS & NOISE OVERLAY
+       ========================================================================== */
+    .liquid-stage {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 18% 15%, rgba(var(--accent-rgb), 0.14), transparent 45%),
+        radial-gradient(circle at 82% 24%, rgba(var(--accent-sec-rgb), 0.16), transparent 48%),
+        radial-gradient(circle at 50% 88%, rgba(45, 212, 191, 0.11), transparent 52%),
+        #05070e;
+      transition: background 0.9s ease;
+    }
+
+    .blob-parallax-layer {
+      position: absolute;
+      inset: 0;
+      will-change: transform;
+      pointer-events: none;
+    }
+
+    .liquid-blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(85px);
+      opacity: 0.42;
+      will-change: transform;
+      animation: floatLiquid var(--blob-speed) ease-in-out infinite alternate;
+      transition: background 0.9s ease;
+    }
+
+    .blob-1 {
+      width: 440px;
+      height: 440px;
+      top: -110px;
+      left: -90px;
+      background: radial-gradient(circle, rgba(var(--accent-rgb), 0.72), transparent 70%);
+    }
+
+    .blob-2 {
+      width: 500px;
+      height: 500px;
+      top: 18%;
+      right: -140px;
+      background: radial-gradient(circle, rgba(var(--accent-sec-rgb), 0.65), transparent 70%);
+      animation-delay: -6s;
+      animation-duration: calc(var(--blob-speed) * 1.2);
+    }
+
+    .blob-3 {
+      width: 420px;
+      height: 420px;
+      bottom: -120px;
+      left: 24%;
+      background: radial-gradient(circle, rgba(45, 212, 191, 0.55), transparent 70%);
+      animation-delay: -11s;
+    }
+
+    .blob-4 {
+      width: 320px;
+      height: 320px;
+      top: 52%;
+      left: -60px;
+      background: radial-gradient(circle, rgba(var(--accent-rgb), 0.42), transparent 72%);
+      animation-delay: -4s;
+    }
+
+    @keyframes floatLiquid {
+      0% {
+        transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+      }
+      50% {
+        transform: translate3d(38px, -28px, 0) scale(1.08) rotate(8deg);
+      }
+      100% {
+        transform: translate3d(-26px, 34px, 0) scale(0.95) rotate(-6deg);
+      }
+    }
+
+    .noise-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      opacity: 0.032;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.85) 0.75px, transparent 0.75px);
+      background-size: 22px 22px;
+    }
+
+    .scroll-progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      width: 0%;
+      z-index: 95;
+      background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary), var(--accent-tertiary));
+      box-shadow: 0 0 14px rgba(var(--accent-rgb), 0.75);
+      pointer-events: none;
+      transition: width 0.08s linear;
+    }
+
+    .cursor-spotlight {
+      position: fixed;
+      width: 460px;
+      height: 460px;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 1;
+      transform: translate(-50%, -50%);
+      background: radial-gradient(
+        circle,
+        rgba(var(--accent-rgb), 0.085) 0%,
+        rgba(var(--accent-sec-rgb), 0.035) 42%,
+        transparent 70%
+      );
+      transition: opacity 0.3s ease;
+    }
+
+    /* ==========================================================================
+       4. SPATIAL LIQUID GLASS SURFACE PRIMITIVES
+       ========================================================================== */
+    .liquid-glass {
+      position: relative;
+      background: linear-gradient(
+        145deg,
+        rgba(255, 255, 255, 0.085) 0%,
+        rgba(255, 255, 255, 0.03) 52%,
+        rgba(255, 255, 255, 0.065) 100%
+      );
+      backdrop-filter: blur(var(--glass-blur)) saturate(180%) brightness(var(--glass-brightness));
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%) brightness(var(--glass-brightness));
+      border: 1px solid var(--border-subtle);
+      border-top-color: var(--border-specular);
+      border-left-color: rgba(255, 255, 255, 0.2);
+      box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.24),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.25),
+        0 20px 50px -15px rgba(0, 0, 0, 0.65);
+      overflow: hidden;
+      transition:
+        transform 0.35s var(--spring),
+        border-color 0.35s ease,
+        box-shadow 0.4s var(--spring);
+      --mx: 50%;
+      --my: 50%;
+    }
+
+    .liquid-glass::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(
+        420px circle at var(--mx) var(--my),
+        rgba(255, 255, 255, 0.14),
+        rgba(var(--accent-rgb), 0.06) 35%,
+        transparent 70%
+      );
+      opacity: 0;
+      transition: opacity 0.35s ease;
+      z-index: 0;
+    }
+
+    .liquid-glass:hover::before {
+      opacity: 1;
+    }
+
+    .liquid-glass:hover {
+      border-color: rgba(255, 255, 255, 0.24);
+      border-top-color: rgba(255, 255, 255, 0.42);
+      box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.36),
+        0 26px 60px -14px rgba(0, 0, 0, 0.72),
+        0 0 28px rgba(var(--accent-rgb), 0.12);
+    }
+
+    .liquid-glass > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Liquid Click Ripple & Easter Egg Refraction Burst */
+    .liquid-ripple-wave {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      transform: translate(-50%, -50%) scale(0);
+      background: radial-gradient(
+        circle,
+        rgba(255, 255, 255, 0.36) 0%,
+        rgba(var(--accent-rgb), 0.24) 45%,
+        transparent 75%
+      );
+      animation: liquidRippleExpand 0.68s var(--spring) forwards;
+      z-index: 4;
+    }
+
+    @keyframes liquidRippleExpand {
+      to {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0;
+      }
+    }
+
+    .liquid-glass.refraction-burst {
+      animation: refractionWaveBurst 1.15s var(--spring);
+    }
+
+    @keyframes refractionWaveBurst {
+      0% {
+        box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.24), 0 20px 50px -15px rgba(0, 0, 0, 0.65);
+      }
+      45% {
+        border-color: rgba(var(--accent-rgb), 0.85);
+        box-shadow:
+          inset 0 0 28px rgba(var(--accent-rgb), 0.38),
+          0 0 42px rgba(var(--accent-rgb), 0.45),
+          0 24px 60px -12px rgba(0, 0, 0, 0.75);
+      }
+      100% {
+        box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.24), 0 20px 50px -15px rgba(0, 0, 0, 0.65);
+      }
+    }
+
+    .liquid-pill {
+      background: rgba(14, 21, 40, 0.66);
+      backdrop-filter: blur(22px) saturate(185%);
+      -webkit-backdrop-filter: blur(22px) saturate(185%);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-top-color: rgba(255, 255, 255, 0.32);
+      border-radius: 999px;
+      box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.25),
+        0 14px 36px rgba(0, 0, 0, 0.5);
+      transition: all 0.3s var(--spring);
+    }
+
+    .gradient-refraction-text {
+      background: linear-gradient(
+        125deg,
+        #ffffff 12%,
+        var(--accent-primary) 50%,
+        var(--accent-secondary) 88%
+      );
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    /* ==========================================================================
+       6. FLOATING NAVBAR, CHAPTER INDICATOR, BILINGUAL & ATMOSPHERE POPOVER
+       ========================================================================== */
+    .navbar-header {
+      position: fixed;
+      top: 16px;
+      left: 0;
+      right: 0;
+      z-index: 55;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 12px;
+      pointer-events: none;
+    }
+
+    .navbar-pill {
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 7px 10px 7px 16px;
+      max-width: 920px;
+      width: 100%;
+    }
+
+    .brand-cluster {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .brand-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      font-weight: 800;
+      font-size: 0.94rem;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+      white-space: nowrap;
+    }
+
+    .brand-orb {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      box-shadow: 0 0 12px var(--accent-primary);
+      flex-shrink: 0;
+    }
+
+    .nav-chapter-badge {
+      display: none;
+      align-items: center;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: var(--accent-primary);
+      background: rgba(var(--accent-rgb), 0.12);
+      border: 1px solid rgba(var(--accent-rgb), 0.25);
+      white-space: nowrap;
+      transition: all 0.3s ease;
+    }
+
+    @media (min-width: 920px) {
+      .nav-chapter-badge {
+        display: inline-flex;
+      }
+    }
+
+    .nav-links {
+      display: none;
+      align-items: center;
+      gap: 3px;
+    }
+
+    @media (min-width: 768px) {
+      .nav-links {
+        display: flex;
+      }
+    }
+
+    .nav-link {
+      padding: 6px 11px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      transition: all 0.25s ease;
+      white-space: nowrap;
+    }
+
+    .nav-link:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .nav-link.active {
+      color: #ffffff;
+      background: rgba(var(--accent-rgb), 0.18);
+      border: 1px solid rgba(var(--accent-rgb), 0.35);
+    }
+
+    .nav-controls {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .lang-switch-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.13);
+    }
+
+    .lang-opt-btn {
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: none;
+      background: transparent;
+      font-family: var(--font-mono);
+      font-size: 0.69rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .lang-opt-btn.active {
+      color: #05070e;
+      background: linear-gradient(135deg, #ffffff, var(--accent-primary));
+      box-shadow: 0 2px 10px rgba(var(--accent-rgb), 0.35);
+    }
+
+    .nav-icon-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.06);
+      color: #f8fafc;
+      font-size: 0.88rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.25s var(--spring);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .nav-icon-btn:hover,
+    .nav-icon-btn.active {
+      border-color: rgba(var(--accent-rgb), 0.55);
+      background: rgba(var(--accent-rgb), 0.18);
+      color: #ffffff;
+      box-shadow: 0 0 16px rgba(var(--accent-rgb), 0.28);
+    }
+
+    .mobile-menu-btn {
+      display: inline-flex;
+    }
+
+    @media (min-width: 768px) {
+      .mobile-menu-btn {
+        display: none;
+      }
+    }
+
+    .nav-cta {
+      display: none;
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 0.79rem;
+      font-weight: 700;
+      color: #05070e;
+      background: linear-gradient(135deg, #ffffff, var(--accent-primary));
+      box-shadow: 0 4px 16px rgba(var(--accent-rgb), 0.35);
+      transition: transform 0.25s var(--spring), box-shadow 0.25s ease;
+      white-space: nowrap;
+      position: relative;
+      overflow: hidden;
+    }
+
+    @media (min-width: 460px) {
+      .nav-cta {
+        display: inline-flex;
+        align-items: center;
+      }
+    }
+
+    .nav-cta:hover {
+      transform: translateY(-1px) scale(1.03);
+      box-shadow: 0 8px 22px rgba(var(--accent-rgb), 0.48);
+    }
+
+    /* Liquid Glass Atmosphere & Accessibility Popover */
+    .glass-popover-wrap {
+      pointer-events: none;
+      width: 100%;
+      max-width: 920px;
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 10px;
+    }
+
+    .glass-popover {
+      pointer-events: auto;
+      width: 100%;
+      max-width: 340px;
+      padding: 18px;
+      border-radius: 24px;
+      background: rgba(10, 16, 32, 0.86);
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+      transform-origin: top right;
+      animation: popoverDrop 0.26s var(--spring);
+    }
+
+    .glass-popover.open {
+      display: flex;
+    }
+
+    @keyframes popoverDrop {
+      from {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.96);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .popover-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .popover-label {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--accent-primary);
+    }
+
+    .preset-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .preset-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 11px;
+      border-radius: 14px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.11);
+      cursor: pointer;
+      transition: all 0.25s ease;
+      text-align: left;
+    }
+
+    .preset-chip:hover {
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.28);
+    }
+
+    .preset-chip.active {
+      color: #ffffff;
+      background: rgba(var(--accent-rgb), 0.18);
+      border-color: rgba(var(--accent-rgb), 0.55);
+      box-shadow: 0 4px 14px rgba(var(--accent-rgb), 0.22);
+    }
+
+    .preset-swatch {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .a11y-toggle-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.09);
+    }
+
+    .a11y-toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 7px 10px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.035);
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .switch-pill {
+      width: 36px;
+      height: 20px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      position: relative;
+      transition: background 0.25s ease;
+      flex-shrink: 0;
+    }
+
+    .switch-pill::after {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #ffffff;
+      transition: transform 0.25s var(--spring);
+    }
+
+    .a11y-toggle-row.on .switch-pill {
+      background: var(--accent-primary);
+      border-color: rgba(255, 255, 255, 0.7);
+    }
+
+    .a11y-toggle-row.on .switch-pill::after {
+      transform: translateX(16px);
+      background: #05070e;
+    }
+
+    /* Mobile Glass Navigation Drawer */
+    .mobile-drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 74px 16px 20px;
+      background: rgba(3, 6, 14, 0.72);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .mobile-drawer-backdrop.open {
+      display: flex;
+    }
+
+    .mobile-drawer-panel {
+      width: 100%;
+      max-width: 420px;
+      padding: 20px;
+      border-radius: 26px;
+      background: rgba(11, 17, 33, 0.9);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      animation: popoverDrop 0.28s var(--spring);
+    }
+
+    .mobile-drawer-link {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 15px;
+      border-radius: 16px;
+      font-size: 0.94rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      background: rgba(255, 255, 255, 0.045);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.25s ease;
+    }
+
+    .mobile-drawer-link:hover,
+    .mobile-drawer-link.active {
+      border-color: rgba(var(--accent-rgb), 0.5);
+      background: rgba(var(--accent-rgb), 0.16);
+      color: #ffffff;
+    }
+
+    .mobile-drawer-idx {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--accent-primary);
+    }
+
+    /* ==========================================================================
+       7. HERO & TELEMETRY SECTION
+       ========================================================================== */
+    .hero-section {
+      padding: 124px 0 56px;
+      position: relative;
+      z-index: 2;
+    }
+
+    @media (min-width: 960px) {
+      .hero-section {
+        padding: 142px 0 68px;
+      }
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 28px;
+      align-items: center;
+    }
+
+    @media (min-width: 960px) {
+      .hero-grid {
+        grid-template-columns: 1.25fr 0.85fr;
+        gap: 36px;
+      }
+    }
+
+    .hero-intro {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    @media (min-width: 960px) {
+      .hero-intro {
+        align-items: flex-start;
+        text-align: left;
+      }
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 7px 15px;
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      margin-bottom: 18px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #34d399;
+      box-shadow: 0 0 10px #34d399;
+      animation: pulseDot 2s infinite;
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(0.85); }
+    }
+
+    .hero-name-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    @media (min-width: 960px) {
+      .hero-name-row {
+        justify-content: flex-start;
+      }
+    }
+
+    .hero-title {
+      font-size: clamp(2.25rem, 5vw, 3.6rem);
+      font-weight: 800;
+      letter-spacing: -0.035em;
+      line-height: 1.08;
+    }
+
+    .handle-pill {
+      padding: 6px 13px;
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--accent-primary);
+      background: rgba(var(--accent-rgb), 0.13);
+      border: 1px solid rgba(var(--accent-rgb), 0.32);
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.25s var(--spring), box-shadow 0.25s ease;
+    }
+
+    .handle-pill:hover {
+      box-shadow: 0 0 18px rgba(var(--accent-rgb), 0.32);
+    }
+
+    .handle-pill:active {
+      transform: scale(0.94);
+    }
+
+    .hero-role {
+      font-size: clamp(1.05rem, 2vw, 1.3rem);
+      font-weight: 600;
+      color: #e2e8f0;
+      margin-bottom: 14px;
+    }
+
+    .hero-bio {
+      max-width: 600px;
+      font-size: 0.98rem;
+      color: var(--text-secondary);
+      margin-bottom: 26px;
+    }
+
+    .hero-cta-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    @media (min-width: 960px) {
+      .hero-cta-group {
+        justify-content: flex-start;
+      }
+    }
+
+    .btn-primary-glass {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 12px 22px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #05070e;
+      background: linear-gradient(135deg, #ffffff 10%, var(--accent-primary) 95%);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      box-shadow: 0 10px 28px rgba(var(--accent-rgb), 0.32);
+      cursor: pointer;
+      transition: transform 0.28s var(--spring), box-shadow 0.28s ease;
+    }
+
+    .btn-primary-glass:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 34px rgba(var(--accent-rgb), 0.48);
+    }
+
+    .btn-glass {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 12px 20px;
+      border-radius: 999px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #f8fafc;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      backdrop-filter: blur(16px);
+      cursor: pointer;
+      transition: all 0.28s var(--spring);
+    }
+
+    .btn-glass:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.32);
+      transform: translateY(-2px);
+    }
+
+    .kbd-hint {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1px 6px;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--accent-primary);
+      background: rgba(var(--accent-rgb), 0.14);
+      border: 1px solid rgba(var(--accent-rgb), 0.32);
+    }
+
+    /* Telemetry Widget Card */
+    .telemetry-card {
+      padding: 24px;
+      border-radius: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .telemetry-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+    }
+
+    .telemetry-title {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--accent-primary);
+    }
+
+    .wib-clock-pill {
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(var(--accent-rgb), 0.14);
+      border: 1px solid rgba(var(--accent-rgb), 0.3);
+      color: #ffffff;
+    }
+
+    .telemetry-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+    }
+
+    .telemetry-row {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 10px 13px;
+      border-radius: 15px;
+      background: rgba(255, 255, 255, 0.035);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .telemetry-key {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+    }
+
+    .telemetry-val {
+      font-size: 0.86rem;
+      font-weight: 600;
+      color: #f1f5f9;
+    }
+
+    .telemetry-nodes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding-top: 2px;
+    }
+
+    .mini-node-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 0.71rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .mini-node-btn:hover,
+    .mini-node-btn.active {
+      color: #ffffff;
+      border-color: rgba(var(--accent-rgb), 0.45);
+      background: rgba(var(--accent-rgb), 0.14);
+    }
+
+    /* ==========================================================================
+       8. SECTIONS, BENTO GRID & INTERACTIVE TECH STACK
+       ========================================================================== */
+    .section-block {
+      padding: 56px 0;
+      position: relative;
+      z-index: 2;
+      scroll-margin-top: 92px;
+    }
+
+    #stack {
+      scroll-margin-top: 96px;
+    }
+
+    .section-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .section-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent-primary);
+      margin-bottom: 6px;
+    }
+
+    .section-heading {
+      font-size: clamp(1.6rem, 3.2vw, 2.25rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+    }
+
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 18px;
+    }
+
+    .bento-card {
+      padding: 26px;
+      border-radius: 26px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .bento-6 {
+      grid-column: span 12;
+    }
+
+    .bento-12 {
+      grid-column: span 12;
+    }
+
+    @media (min-width: 820px) {
+      .bento-6 {
+        grid-column: span 6;
+      }
+    }
+
+    .card-heading {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.12rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 10px;
+    }
+
+    .card-body-text {
+      font-size: 0.92rem;
+      color: var(--text-secondary);
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .glass-tag {
+      padding: 5px 11px;
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 0.73rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .stack-matrix {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 18px 0 16px;
+    }
+
+    .stack-filter-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .stack-tab-btn {
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.11);
+      cursor: pointer;
+      transition: all 0.25s var(--spring);
+    }
+
+    .stack-tab-btn:hover {
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.26);
+    }
+
+    .stack-tab-btn.active {
+      color: #05070e;
+      background: linear-gradient(135deg, #ffffff, var(--accent-primary));
+      border-color: rgba(255, 255, 255, 0.85);
+      box-shadow: 0 4px 14px rgba(var(--accent-rgb), 0.28);
+    }
+
+    .stack-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 14px;
+      border-radius: 14px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      background: rgba(255, 255, 255, 0.045);
+      border: 1px solid rgba(255, 255, 255, 0.11);
+      cursor: pointer;
+      transition: all 0.25s var(--spring);
+    }
+
+    .stack-pill:hover,
+    .stack-pill.active {
+      color: #ffffff;
+      background: rgba(var(--accent-rgb), 0.16);
+      border-color: rgba(var(--accent-rgb), 0.5);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(var(--accent-rgb), 0.18);
+    }
+
+    .stack-cat-tag {
+      font-family: var(--font-mono);
+      font-size: 0.67rem;
+      padding: 2px 7px;
+      border-radius: 999px;
+      color: var(--accent-primary);
+      background: rgba(var(--accent-rgb), 0.12);
+    }
+
+    .stack-desc-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 13px 16px;
+      border-radius: 16px;
+      font-size: 0.84rem;
+      color: var(--text-secondary);
+      background: rgba(5, 9, 20, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+    }
+
+    /* ==========================================================================
+       9. PROJECTS SHOWCASE & CASE STUDY MODAL
+       ========================================================================== */
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .filter-btn {
+      padding: 8px 15px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      cursor: pointer;
+      transition: all 0.25s var(--spring);
+    }
+
+    .filter-btn:hover {
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.28);
+    }
+
+    .filter-btn.active {
+      color: #05070e;
+      background: linear-gradient(135deg, #ffffff, var(--accent-primary));
+      border-color: rgba(255, 255, 255, 0.85);
+      box-shadow: 0 6px 18px rgba(var(--accent-rgb), 0.3);
+    }
+
+    .projects-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    @media (min-width: 768px) {
+      .projects-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .project-card {
+      padding: 26px;
+      border-radius: 26px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 18px;
+      cursor: pointer;
+    }
+
+    .project-top-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .project-cat-pill {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 4px 11px;
+      border-radius: 999px;
+      color: var(--accent-primary);
+      background: rgba(var(--accent-rgb), 0.13);
+      border: 1px solid rgba(var(--accent-rgb), 0.28);
+    }
+
+    .project-year {
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      color: var(--text-muted);
+    }
+
+    .project-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+      margin-bottom: 8px;
+    }
+
+    .project-summary {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .project-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .inspect-label {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--accent-primary);
+    }
+
+    /* Case Study Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 90;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(3, 6, 14, 0.78);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-panel {
+      width: 100%;
+      max-width: 640px;
+      max-height: 88vh;
+      overflow-y: auto;
+      padding: 28px;
+      border-radius: 28px;
+      background: rgba(11, 17, 33, 0.88);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .modal-close-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.07);
+      color: #ffffff;
+      font-size: 1rem;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .modal-close-btn:hover {
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .modal-section-box {
+      padding: 15px 17px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      margin-bottom: 14px;
+    }
+
+    .modal-box-label {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--accent-primary);
+      margin-bottom: 6px;
+    }
+
+    /* ==========================================================================
+       10. TRACK RECORD & JOURNEY TIMELINE
+       ========================================================================== */
+    .timeline-wrapper {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      padding-left: 24px;
+      border-left: 2px solid rgba(var(--accent-rgb), 0.28);
+    }
+
+    .timeline-entry {
+      position: relative;
+    }
+
+    .timeline-dot {
+      position: absolute;
+      left: -32px;
+      top: 26px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      box-shadow: 0 0 14px rgba(var(--accent-rgb), 0.7);
+      border: 2px solid #05070e;
+    }
+
+    .timeline-card {
+      padding: 24px 26px;
+      border-radius: 26px;
+    }
+
+    .timeline-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .timeline-period {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 11px;
+      border-radius: 999px;
+      color: var(--accent-primary);
+      background: rgba(var(--accent-rgb), 0.13);
+      border: 1px solid rgba(var(--accent-rgb), 0.28);
+    }
+
+    .timeline-org {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .timeline-highlights {
+      margin-top: 12px;
+      padding-left: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+    }
+
+    .timeline-highlights li::marker {
+      color: var(--accent-primary);
+    }
+
+    /* ==========================================================================
+       11. CONTACT CARD, TOAST & FOOTER
+       ========================================================================== */
+    .contact-card {
+      padding: 34px 28px;
+      border-radius: 30px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .glass-toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      z-index: 100;
+      padding: 11px 20px;
+      border-radius: 999px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: #ffffff;
+      background: rgba(11, 18, 36, 0.88);
+      border: 1px solid rgba(var(--accent-rgb), 0.45);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.55);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s var(--spring);
+    }
+
+    .glass-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .reveal-on-scroll {
+      opacity: 0;
+      transform: translateY(18px);
+      transition:
+        opacity 0.6s var(--spring),
+        transform 0.6s var(--spring),
+        border-color 0.35s ease,
+        box-shadow 0.4s var(--spring);
+    }
+
+    .reveal-on-scroll.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .back-to-top-btn {
+      position: fixed;
+      right: 22px;
+      bottom: 24px;
+      width: 44px;
+      height: 44px;
+      z-index: 60;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #ffffff;
+      cursor: pointer;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(14px) scale(0.92);
+    }
+
+    .back-to-top-btn.visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0) scale(1);
+    }
+
+    .back-to-top-btn:hover {
+      border-color: rgba(var(--accent-rgb), 0.65);
+      box-shadow: 0 10px 26px rgba(var(--accent-rgb), 0.35);
+      transform: translateY(-2px) scale(1.05);
+    }
+
+    footer {
+      position: relative;
+      z-index: 2;
+      padding: 38px 0 54px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <!-- Ambient Liquid Background with Multi-Layer Depth Parallax -->
+  <div class="liquid-stage" aria-hidden="true">
+    <div class="blob-parallax-layer" data-parallax-speed="0.06">
+      <div class="liquid-blob blob-1"></div>
+    </div>
+    <div class="blob-parallax-layer" data-parallax-speed="-0.08">
+      <div class="liquid-blob blob-2"></div>
+    </div>
+    <div class="blob-parallax-layer" data-parallax-speed="0.05">
+      <div class="liquid-blob blob-3"></div>
+    </div>
+    <div class="blob-parallax-layer" data-parallax-speed="-0.04">
+      <div class="liquid-blob blob-4"></div>
+    </div>
+  </div>
+  <div class="noise-overlay" aria-hidden="true"></div>
+  <div class="scroll-progress-bar" id="scrollProgressBar" aria-hidden="true"></div>
+  <div class="cursor-spotlight" id="cursorSpotlight" aria-hidden="true"></div>
+
+  <!-- Floating Liquid Glass Pill Navbar -->
+  <header class="navbar-header">
+    <nav class="liquid-pill navbar-pill" aria-label="Primary Navigation">
+      <div class="brand-cluster">
+        <a href="#top" class="brand-link">
+          <span class="brand-orb"></span>
+          <span id="navBrandText">Evknzz</span>
+        </a>
+        <span class="nav-chapter-badge" id="navChapterBadge">00 // OVERVIEW</span>
+      </div>
+
+      <div class="nav-links">
+        <a href="#about" class="nav-link" data-i18n="nav_about">About</a>
+        <a href="#stack" class="nav-link" data-i18n="nav_stack">Stack</a>
+        <a href="#projects" class="nav-link" data-i18n="nav_projects">Projects</a>
+        <a href="#journey" class="nav-link" data-i18n="nav_journey">Track Record</a>
+        <a href="#contact" class="nav-link" data-i18n="nav_contact">Contact</a>
+      </div>
+
+      <div class="nav-controls">
+        <!-- Bilingual Switcher (ID / EN) -->
+        <div class="lang-switch-pill" role="group" aria-label="Language Switcher">
+          <button type="button" class="lang-opt-btn active" data-lang="id">ID</button>
+          <button type="button" class="lang-opt-btn" data-lang="en">EN</button>
+        </div>
+
+        <!-- Liquid Glass Atmosphere & Accessibility Trigger -->
+        <button type="button" class="nav-icon-btn" id="glassAtmosphereBtn" title="Liquid Glass Atmosphere & Accessibility" aria-label="Liquid Glass Atmosphere & Accessibility" aria-expanded="false">
+          ✦
+        </button>
+
+        <!-- Mobile Glass Navigation Drawer Trigger -->
+        <button type="button" class="nav-icon-btn mobile-menu-btn" id="mobileDrawerBtn" title="Menu Navigasi" aria-label="Open Navigation Menu" aria-expanded="false">
+          ☰
+        </button>
+
+        <a href="#contact" class="nav-cta magnetic-btn" data-i18n="nav_connect">Connect</a>
+      </div>
+    </nav>
+
+    <!-- Liquid Glass Atmosphere & Accessibility Popover -->
+    <div class="glass-popover-wrap">
+      <div class="liquid-glass glass-popover" id="glassAtmospherePopover" role="dialog" aria-label="Glass Atmosphere Settings">
+        <div class="popover-title-row">
+          <span class="popover-label" data-i18n="fx_title">GLASS ATMOSPHERE</span>
+          <span class="wib-clock-pill" id="wibSyncStatusTag" style="font-size: 0.65rem; padding: 2px 8px;">WIB SYNC</span>
+        </div>
+
+        <div class="preset-grid" id="glassPresetGrid">
+          <button type="button" class="preset-chip active" data-preset="auto">
+            <span class="preset-swatch" style="background: conic-gradient(#38bdf8, #fb923c, #34d399, #38bdf8);"></span>
+            <span data-i18n="preset_auto">Auto WIB</span>
+          </button>
+          <button type="button" class="preset-chip" data-preset="cyan">
+            <span class="preset-swatch" style="background: #38bdf8;"></span>
+            <span>Deep Cyan</span>
+          </button>
+          <button type="button" class="preset-chip" data-preset="emerald">
+            <span class="preset-swatch" style="background: #34d399;"></span>
+            <span>Emerald OPS</span>
+          </button>
+          <button type="button" class="preset-chip" data-preset="violet">
+            <span class="preset-swatch" style="background: #c084fc;"></span>
+            <span>Ultraviolet</span>
+          </button>
+        </div>
+
+        <div class="a11y-toggle-list">
+          <div class="a11y-toggle-row on" id="toggleSoundRow" role="switch" aria-checked="true" tabindex="0">
+            <span data-i18n="a11y_sound">Tactile Micro-Sound</span>
+            <span class="switch-pill"></span>
+          </div>
+          <div class="a11y-toggle-row" id="toggleMotionRow" role="switch" aria-checked="false" tabindex="0">
+            <span data-i18n="a11y_motion">Reduce Motion</span>
+            <span class="switch-pill"></span>
+          </div>
+          <div class="a11y-toggle-row" id="toggleContrastRow" role="switch" aria-checked="false" tabindex="0">
+            <span data-i18n="a11y_contrast">High Contrast Glass</span>
+            <span class="switch-pill"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Glass Navigation Drawer -->
+  <div class="mobile-drawer-backdrop" id="mobileNavDrawer" role="dialog" aria-modal="true" aria-label="Mobile Navigation">
+    <div class="liquid-glass mobile-drawer-panel">
+      <div class="popover-title-row" style="margin-bottom: 4px;">
+        <span class="popover-label">NAVIGATION // EVKNZZ</span>
+        <button type="button" class="modal-close-btn" id="closeMobileDrawerBtn" aria-label="Close Menu">✕</button>
+      </div>
+      <a href="#about" class="mobile-drawer-link">
+        <span data-i18n="nav_about">About</span>
+        <span class="mobile-drawer-idx">01</span>
+      </a>
+      <a href="#stack" class="mobile-drawer-link">
+        <span data-i18n="nav_stack">Stack</span>
+        <span class="mobile-drawer-idx">01.B</span>
+      </a>
+      <a href="#projects" class="mobile-drawer-link">
+        <span data-i18n="nav_projects">Projects</span>
+        <span class="mobile-drawer-idx">02</span>
+      </a>
+      <a href="#journey" class="mobile-drawer-link">
+        <span data-i18n="nav_journey">Track Record</span>
+        <span class="mobile-drawer-idx">03</span>
+      </a>
+      <a href="#contact" class="mobile-drawer-link">
+        <span data-i18n="nav_contact">Contact</span>
+        <span class="mobile-drawer-idx">04</span>
+      </a>
+    </div>
+  </div>
+
+  <main id="top">
+    <!-- Hero & Live Telemetry Section -->
+    <section class="hero-section">
+      <div class="container">
+        <div class="hero-grid">
+          <!-- Left Column: Identity & Primary Actions -->
+          <div class="hero-intro">
+            <div class="status-badge">
+              <span class="status-dot"></span>
+              <span id="heroStatusText">Open to Software &amp; Infrastructure Engineering</span>
+            </div>
+
+            <div class="hero-name-row">
+              <h1 class="hero-title gradient-refraction-text" id="heroName">Evan Bhagaskara</h1>
+              <span class="handle-pill" id="heroHandle" title="Triple-click for developer note">@Evknzz</span>
+            </div>
+
+            <p class="hero-role" id="heroRole">Software Engineering &amp; Systems Architecture</p>
+            <p class="hero-bio" id="heroBio">
+              Focusing on resilient database architectures (SQL &amp; NoSQL), backend algorithms, Linux environments, and low-latency multiplayer server infrastructure.
+            </p>
+
+            <div class="hero-cta-group">
+              <a href="#projects" class="btn-primary-glass magnetic-btn">
+                <span data-i18n="cta_explore">Explore Case Studies</span>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+              </a>
+              <button type="button" class="btn-glass magnetic-btn" id="heroCopyEmailBtn">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                <span data-i18n="cta_copy_email">Copy Email</span>
+                <kbd class="kbd-hint" title="Press C to copy email">C</kbd>
+              </button>
+            </div>
+          </div>
+
+          <!-- Right Column: Liquid Glass System Telemetry Widget -->
+          <aside class="liquid-glass telemetry-card" data-tilt aria-label="System Telemetry">
+            <div class="telemetry-header">
+              <span class="telemetry-title">SYSTEM TELEMETRY // NODE-ID</span>
+              <span class="wib-clock-pill" id="liveWibClock">--:--:-- WIB</span>
+            </div>
+
+            <div class="telemetry-rows">
+              <div class="telemetry-row">
+                <span class="telemetry-key" data-i18n="tel_edu">Academic Affiliation</span>
+                <span class="telemetry-val" id="telemetryEducation">D-IV TRPL • Politeknik Negeri Madiun</span>
+              </div>
+              <div class="telemetry-row">
+                <span class="telemetry-key" data-i18n="tel_loc">Base Location</span>
+                <span class="telemetry-val" id="telemetryLocation">Madiun, East Java, ID</span>
+              </div>
+              <div class="telemetry-row">
+                <span class="telemetry-key" data-i18n="tel_stack">Core Stack</span>
+                <span class="telemetry-val" id="telemetryStack">Python • PostgreSQL • MongoDB • Neo4j • Linux</span>
+              </div>
+            </div>
+
+            <div class="telemetry-nodes">
+              <button type="button" class="mini-node-btn active" data-ping-id="Ubuntu Linux VPS Node: Aktif &amp; Teroptimasi" data-ping-en="Ubuntu Linux VPS Node: Active &amp; Hardened">
+                <span class="status-dot"></span>
+                <span>Ubuntu VPS</span>
+              </button>
+              <button type="button" class="mini-node-btn" data-ping-id="Multi-Model Data Engine: SQL + Document + Graph" data-ping-en="Multi-Model Data Engine: SQL + Document + Graph">
+                <span class="status-dot"></span>
+                <span>Data Engine</span>
+              </button>
+              <button type="button" class="mini-node-btn" data-ping-id="GitHub &amp; Kolaborasi Remote: Terbuka" data-ping-en="GitHub &amp; Remote Collaboration: Open">
+                <span class="status-dot"></span>
+                <span>Collab: Open</span>
+              </button>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bento Philosophy & Interactive Tech Stack Section -->
+    <section id="about" class="section-block">
+      <div class="container">
+        <div class="section-header">
+          <div>
+            <p class="section-eyebrow">01 // ARCHITECTURE &amp; PHILOSOPHY</p>
+            <h2 class="section-heading" data-i18n="sec_about_title">Engineering Principles &amp; Core Stack</h2>
+          </div>
+        </div>
+
+        <div class="bento-grid">
+          <!-- Card 1: Engineering Philosophy -->
+          <div class="liquid-glass bento-card bento-6 reveal-on-scroll" data-tilt>
+            <div>
+              <h3 class="card-heading">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                <span data-i18n="phil_1_title">Data-First &amp; Resilient Systems</span>
+              </h3>
+              <p class="card-body-text" data-i18n="phil_1_body">
+                Merancang sistem perangkat lunak dimulai dari pemodelan data yang tepat—memilih antara integritas relasional SQL, fleksibilitas dokumen NoSQL, maupun relasi kompleks berbasis graf—sebelum mengoptimalkan performa di level sistem operasi Linux.
+              </p>
+            </div>
+            <div class="tag-row">
+              <span class="glass-tag">ACID &amp; Schema Design</span>
+              <span class="glass-tag">Graph Traversal</span>
+              <span class="glass-tag">Low-Latency Tickrate</span>
+            </div>
+          </div>
+
+          <!-- Card 2: Infrastructure & Game Server Roots -->
+          <div class="liquid-glass bento-card bento-6 reveal-on-scroll" data-tilt>
+            <div>
+              <h3 class="card-heading">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+                <span data-i18n="phil_2_title">Linux VPS &amp; Multiplayer Runtime</span>
+              </h3>
+              <p class="card-body-text" data-i18n="phil_2_body">
+                Berpengalaman mengelola server komunitas berskala aktif secara mandiri di atas VPS Linux Ubuntu sejak 2019—mulai dari kompilasi plugin Pawn (.amxx), modifikasi engine Xash3D, hingga penyetelan JVM &amp; proxy jaringan Minecraft.
+              </p>
+            </div>
+            <div class="tag-row">
+              <span class="glass-tag">Ubuntu Headless Ops</span>
+              <span class="glass-tag">Xash3D / AMX Mod X</span>
+              <span class="glass-tag">Velocity &amp; PaperMC</span>
+            </div>
+          </div>
+
+          <!-- Card 3: Interactive Tech Stack Matrix -->
+          <div id="stack" class="liquid-glass bento-card bento-12 reveal-on-scroll" data-tilt>
+            <div>
+              <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;">
+                <h3 class="card-heading" style="margin-bottom: 0;">
+                  <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
+                  <span data-i18n="stack_title">Interactive Tech Stack Matrix</span>
+                </h3>
+                <div class="stack-filter-group" id="stackFilterBar" role="tablist" aria-label="Filter Tech Stack">
+                  <button type="button" class="stack-tab-btn active" data-stack-group="All">All (10)</button>
+                  <button type="button" class="stack-tab-btn" data-stack-group="Database">Database</button>
+                  <button type="button" class="stack-tab-btn" data-stack-group="Systems & Engine">Systems &amp; Engine</button>
+                  <button type="button" class="stack-tab-btn" data-stack-group="Dev & Scripting">Dev &amp; Scripting</button>
+                </div>
+              </div>
+
+              <div class="stack-matrix" id="stackMatrix"></div>
+
+              <div class="stack-desc-bar" id="stackDescriptionBar"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Projects Showcase Section -->
+    <section id="projects" class="section-block">
+      <div class="container">
+        <div class="section-header">
+          <div>
+            <p class="section-eyebrow">02 // SELECTED CASE STUDIES</p>
+            <h2 class="section-heading" data-i18n="sec_proj_title">Featured Systems &amp; Data Projects</h2>
+          </div>
+
+          <div class="filter-bar" id="projectFilterBar" role="tablist" aria-label="Filter Projects">
+            <button type="button" class="filter-btn active" data-filter="All">All</button>
+            <button type="button" class="filter-btn" data-filter="Data & DB">Data &amp; DB</button>
+            <button type="button" class="filter-btn" data-filter="Systems & Infra">Systems &amp; Infra</button>
+            <button type="button" class="filter-btn" data-filter="Scripting">Scripting</button>
+          </div>
+        </div>
+
+        <div class="projects-grid" id="projectsGrid"></div>
+      </div>
+    </section>
+
+    <!-- Track Record & Journey Section -->
+    <section id="journey" class="section-block">
+      <div class="container">
+        <div class="section-header">
+          <div>
+            <p class="section-eyebrow">03 // EXPERIENCE &amp; TRACK RECORD</p>
+            <h2 class="section-heading" data-i18n="sec_journey_title">Rekam Jejak &amp; Perjalanan</h2>
+          </div>
+        </div>
+
+        <div class="timeline-wrapper" id="timelineContainer"></div>
+      </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="section-block">
+      <div class="container">
+        <div class="liquid-glass contact-card reveal-on-scroll" data-tilt>
+          <p class="section-eyebrow">04 // COLLABORATE &amp; CONNECT</p>
+          <h2 class="section-heading gradient-refraction-text" data-i18n="contact_title">Let's Build Resilient Software Together</h2>
+          <p class="hero-bio" style="margin-bottom: 8px;" data-i18n="contact_bio">
+            Terbuka untuk diskusi seputar rekayasa perangkat lunak, arsitektur basis data SQL/NoSQL, optimasi server Linux, maupun kolaborasi proyek teknologi.
+          </p>
+
+          <div class="hero-cta-group" style="justify-content: center;">
+            <button type="button" class="btn-primary-glass magnetic-btn" id="contactCopyEmailBtn">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              <span id="contactEmailLabel">evan.bhagaskara@evknzz.dev</span>
+            </button>
+            <a href="https://github.com/Evknzz" target="_blank" rel="noopener noreferrer" class="btn-glass magnetic-btn" id="contactGithubLink">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+              <span>GitHub @Evknzz</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p id="footerText">© 2026 Evan Bhagaskara (@Evknzz) — Built with Spatial Liquid Glass Architecture.</p>
+    </div>
+  </footer>
+
+  <!-- Case Study Detail Modal -->
+  <div class="modal-backdrop" id="caseStudyModal" role="dialog" aria-modal="true" aria-labelledby="modalProjTitle">
+    <div class="liquid-glass modal-panel">
+      <div class="modal-header">
+        <div>
+          <span class="project-cat-pill" id="modalProjCat">Category</span>
+          <h3 class="project-title" id="modalProjTitle" style="margin-top: 10px; margin-bottom: 2px;">Project Title</h3>
+          <span class="project-year" id="modalProjYear">2025</span>
+        </div>
+        <button type="button" class="modal-close-btn" id="closeCaseModalBtn" aria-label="Close modal">✕</button>
+      </div>
+
+      <p class="project-summary" id="modalProjSummary" style="margin-bottom: 16px;"></p>
+
+      <div class="modal-section-box">
+        <div class="modal-box-label" data-i18n="modal_arch_label">System Architecture &amp; Implementation</div>
+        <p class="card-body-text" id="modalProjArch"></p>
+      </div>
+
+      <div class="modal-section-box">
+        <div class="modal-box-label" data-i18n="modal_impact_label">Engineering Impact &amp; Metrics</div>
+        <p class="card-body-text" id="modalProjImpact"></p>
+      </div>
+
+      <div class="tag-row" id="modalProjTags"></div>
+    </div>
+  </div>
+
+  <!-- Secret Developer Easter Egg Modal (Triple-Click @Evknzz) -->
+  <div class="modal-backdrop" id="easterEggModal" role="dialog" aria-modal="true" aria-labelledby="eggModalTitle">
+    <div class="liquid-glass modal-panel" style="max-width: 560px;">
+      <div class="modal-header">
+        <div>
+          <span class="project-cat-pill">EASTER EGG // DEV LOG #01</span>
+          <h3 class="project-title" id="eggModalTitle" style="margin-top: 10px; margin-bottom: 2px;" data-i18n="egg_title">Behind the Root Shell (@Evknzz)</h3>
+          <span class="project-year">Ubuntu VPS • Xash3D • PaperMC</span>
+        </div>
+        <button type="button" class="modal-close-btn" id="closeEggModalBtn" aria-label="Close developer note">✕</button>
+      </div>
+
+      <div class="modal-section-box">
+        <div class="modal-box-label" data-i18n="egg_box1_label">2021 — 2023 • First CS 1.6 Xash Engine Server in SEA</div>
+        <p class="card-body-text" data-i18n="egg_box1_body">
+          Berawal dari rasa penasaran menjalankan Counter-Strike 1.6 lintas perangkat langsung di atas VPS Linux Ubuntu tanpa antarmuka grafis, lahirlah CSSEKAI &amp; MythsCS—server berbasis Xash3D pertama di Asia Tenggara dengan modifikasi Zombie Escape dan plugin .amxx rakitan sendiri yang menembus 32 pemain aktif bersamaan.
+        </p>
+      </div>
+
+      <div class="modal-section-box" style="margin-bottom: 0;">
+        <div class="modal-box-label" data-i18n="egg_box2_label">2019 — Present • Engineering Mindset</div>
+        <p class="card-body-text" data-i18n="egg_box2_body">
+          Pengalaman mengelola jaringan Minecraft (Dev Asem Begete Network &amp; Dev ISEKAISMP) dan server Linux membentuk fondasi cara saya merancang basis data SQL/NoSQL dan sistem backend hari ini: terukur, hemat resource, dan tahan beban tinggi.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Back-to-Top Liquid Pill -->
+  <button type="button" class="liquid-pill back-to-top-btn" id="backToTopBtn" title="Kembali ke atas" aria-label="Back to top">
+    ↑
+  </button>
+
+  <!-- Floating Glass Toast Notification -->
+  <div class="glass-toast" id="glassToast" role="status" aria-live="polite"></div>
+
+  <script>
+    /* ==========================================================================
+       BILINGUAL UI DICTIONARY (ID / EN) & PORTFOLIO DATA
+       ========================================================================== */
+    const UI_STRINGS = {
+      id: {
+        nav_about: "Tentang",
+        nav_stack: "Teknologi",
+        nav_projects: "Proyek",
+        nav_journey: "Rekam Jejak",
+        nav_contact: "Kontak",
+        nav_connect: "Terhubung",
+        fx_title: "ATMOSFER KACA",
+        preset_auto: "Auto WIB",
+        a11y_sound: "Suara Mikro Kristal",
+        a11y_motion: "Kurangi Gerakan",
+        a11y_contrast: "Kontras Kaca Tinggi",
+        cta_explore: "Jelajahi Studi Kasus",
+        cta_copy_email: "Salin Email",
+        tel_edu: "Afiliasi Akademik",
+        tel_loc: "Lokasi Basis",
+        tel_stack: "Teknologi Inti",
+        sec_about_title: "Prinsip Rekayasa & Teknologi Inti",
+        phil_1_title: "Sistem Berbasis Data & Tangguh",
+        phil_1_body: "Merancang sistem perangkat lunak dimulai dari pemodelan data yang tepat—memilih antara integritas relasional SQL, fleksibilitas dokumen NoSQL, maupun relasi kompleks berbasis graf—sebelum mengoptimalkan performa di level sistem operasi Linux.",
+        phil_2_title: "VPS Linux & Runtime Multiplayer",
+        phil_2_body: "Berpengalaman mengelola server komunitas berskala aktif secara mandiri di atas VPS Linux Ubuntu sejak 2019—mulai dari kompilasi plugin Pawn (.amxx), modifikasi engine Xash3D, hingga penyetelan JVM & proxy jaringan Minecraft.",
+        stack_title: "Matriks Teknologi Interaktif",
+        sec_proj_title: "Studi Kasus Sistem & Data Pilihan",
+        inspect_arch: "Bedah Arsitektur →",
+        sec_journey_title: "Rekam Jejak & Perjalanan",
+        contact_title: "Mari Bangun Perangkat Lunak Tangguh Bersama",
+        contact_bio: "Terbuka untuk diskusi seputar rekayasa perangkat lunak, arsitektur basis data SQL/NoSQL, optimasi server Linux, maupun kolaborasi proyek teknologi.",
+        modal_arch_label: "Arsitektur Sistem & Implementasi",
+        modal_impact_label: "Dampak Rekayasa & Metrik",
+        egg_title: "Di Balik Layar Root Shell (@Evknzz)",
+        egg_box1_label: "2021 — 2023 • Server CS 1.6 Xash Engine Pertama di Asia Tenggara",
+        egg_box1_body: "Berawal dari eksperimen menjalankan Counter-Strike 1.6 lintas perangkat langsung di atas VPS Linux Ubuntu headless, lahirlah CSSEKAI & MythsCS—server berbasis Xash3D pertama di Asia Tenggara dengan modifikasi Zombie Escape dan plugin .amxx rakitan sendiri yang menembus 32 pemain aktif bersamaan.",
+        egg_box2_label: "2019 — Sekarang • Pola Pikir Rekayasa Sistem",
+        egg_box2_body: "Pengalaman mengelola jaringan Minecraft (Dev Asem Begete Network & Dev ISEKAISMP) dan VPS Linux membentuk fondasi cara saya merancang basis data SQL/NoSQL dan sistem backend hari ini: terukur, hemat resource, dan tahan beban tinggi.",
+        toast_email_copied: "Email disalin: ",
+        toast_lang_switched: "Bahasa diubah ke Bahasa Indonesia"
+      },
+      en: {
+        nav_about: "About",
+        nav_stack: "Stack",
+        nav_projects: "Projects",
+        nav_journey: "Track Record",
+        nav_contact: "Contact",
+        nav_connect: "Connect",
+        fx_title: "GLASS ATMOSPHERE",
+        preset_auto: "Auto WIB",
+        a11y_sound: "Tactile Micro-Sound",
+        a11y_motion: "Reduce Motion",
+        a11y_contrast: "High Contrast Glass",
+        cta_explore: "Explore Case Studies",
+        cta_copy_email: "Copy Email",
+        tel_edu: "Academic Affiliation",
+        tel_loc: "Base Location",
+        tel_stack: "Core Stack",
+        sec_about_title: "Engineering Principles & Core Stack",
+        phil_1_title: "Data-First & Resilient Systems",
+        phil_1_body: "Architecting software starts with accurate data modeling—choosing between SQL relational integrity, NoSQL document flexibility, or graph relationships—before tuning performance at the Linux operating system layer.",
+        phil_2_title: "Linux VPS & Multiplayer Runtime",
+        phil_2_body: "Hands-on experience operating active community servers independently on Ubuntu Linux VPS since 2019—from compiling custom Pawn (.amxx) plugins and modifying the Xash3D engine to tuning JVM flags and Minecraft proxies.",
+        stack_title: "Interactive Tech Stack Matrix",
+        sec_proj_title: "Featured Systems & Data Projects",
+        inspect_arch: "Inspect Architecture →",
+        sec_journey_title: "Track Record & Engineering Journey",
+        contact_title: "Let's Build Resilient Software Together",
+        contact_bio: "Open to discussions on software engineering, SQL/NoSQL database architecture, Linux server optimization, and technical project collaborations.",
+        modal_arch_label: "System Architecture & Implementation",
+        modal_impact_label: "Engineering Impact & Metrics",
+        egg_title: "Behind the Root Shell (@Evknzz)",
+        egg_box1_label: "2021 — 2023 • First CS 1.6 Xash Engine Server in SEA",
+        egg_box1_body: "Born from running cross-platform Counter-Strike 1.6 directly on a headless Ubuntu Linux VPS, CSSEKAI & MythsCS became the first Xash3D-powered CS 1.6 servers in Southeast Asia—featuring custom Zombie Escape mods and self-authored .amxx plugins reaching 32 concurrent players.",
+        egg_box2_label: "2019 — Present • Systems Engineering Mindset",
+        egg_box2_body: "Operating Minecraft networks (Dev Asem Begete Network & Dev ISEKAISMP) and Linux VPS infrastructure shaped how I design SQL/NoSQL databases and backend services today: measurable, resource-efficient, and resilient under load.",
+        toast_email_copied: "Email copied: ",
+        toast_lang_switched: "Language switched to English"
+      }
+    };
+
+    window.PORTFOLIO_DATA = {
+      profile: {
+        brand: "Evknzz",
+        name: "Evan Bhagaskara",
+        handle: "@Evknzz",
+        role: "Software Engineering & Systems Architecture",
+        roleEn: "Software Engineering & Systems Architecture",
+        status: "Terbuka untuk Rekayasa Perangkat Lunak & Infrastruktur",
+        statusEn: "Open to Software & Infrastructure Engineering",
+        education: "D-IV TRPL • Politeknik Negeri Madiun",
+        location: "Madiun, East Java, ID",
+        activeStackSummary: "Python • PostgreSQL • MongoDB • Neo4j • Linux",
+        bio: "Berfokus pada arsitektur basis data tangguh (SQL & NoSQL), algoritma backend, lingkungan Linux Ubuntu, dan infrastruktur server multiplayer berlatensi rendah.",
+        bioEn: "Focusing on resilient database architectures (SQL & NoSQL), backend algorithms, Linux environments, and low-latency multiplayer server infrastructure.",
+        email: "evan.bhagaskara@evknzz.dev",
+        githubUrl: "https://github.com/Evknzz"
+      },
+      glassFx: {
+        blur: 24,
+        brightness: 100
+      },
+      stack: [
+        {
+          name: "Python",
+          category: "Language",
+          group: "Dev & Scripting",
+          desc: "Layanan backend, skrip ETL data, dan pipeline analitik graf.",
+          descEn: "Backend services, data ETL scripts, and graph analytics pipelines."
+        },
+        {
+          name: "PostgreSQL",
+          category: "Relational DB",
+          group: "Database",
+          desc: "Skema ternormalisasi, transaksi ACID, pengindeksan, dan optimasi kueri.",
+          descEn: "Normalized schemas, ACID transactions, indexing, and query optimization."
+        },
+        {
+          name: "MySQL",
+          category: "Relational DB",
+          group: "Database",
+          desc: "Penyimpanan relasional konkurensi tinggi untuk aplikasi web dan persistensi server game.",
+          descEn: "High-concurrency relational storage for web apps and game server persistence."
+        },
+        {
+          name: "MongoDB",
+          category: "Document NoSQL",
+          group: "Database",
+          desc: "Pemodelan dokumen fleksibel, pipeline agregasi, dan migrasi dari SQL lama.",
+          descEn: "Flexible document modeling, aggregation pipelines, and migration from legacy SQL."
+        },
+        {
+          name: "Neo4j",
+          category: "Graph DB",
+          group: "Database",
+          desc: "Penelusuran graf Cypher, metrik sentralitas, dan deteksi anomali/pola AML.",
+          descEn: "Cypher graph traversal, centrality metrics, and anomaly/AML pattern detection."
+        },
+        {
+          name: "Linux Ubuntu",
+          category: "OS & VPS",
+          group: "Systems & Engine",
+          desc: "Administrasi VPS headless, layanan systemd, jaringan, dan pengamanan firewall.",
+          descEn: "Headless VPS administration, systemd services, networking, and firewall hardening."
+        },
+        {
+          name: "Xash3D Engine",
+          category: "Game Engine",
+          group: "Systems & Engine",
+          desc: "Deployment server dedikasi Counter-Strike 1.6 Xash3D dan penyetelan lintas platform di Ubuntu.",
+          descEn: "Dedicated Counter-Strike 1.6 Xash3D server deployment and cross-platform tuning on Ubuntu."
+        },
+        {
+          name: "AMX Mod X (.amxx)",
+          category: "Pawn Scripting",
+          group: "Dev & Scripting",
+          desc: "Plugin gameplay Pawn kustom, logika entitas Zombie Escape, dan event hook server.",
+          descEn: "Custom Pawn gameplay plugins, Zombie Escape entity logic, and server event hooks."
+        },
+        {
+          name: "Velocity & PaperMC",
+          category: "JVM Infra",
+          group: "Systems & Engine",
+          desc: "Jaringan multi-proxy Minecraft, flag JVM Aikar, dan optimasi tick-rate.",
+          descEn: "Multi-proxy Minecraft networks, Aikar JVM flags, and tick-rate optimization."
+        },
+        {
+          name: "Docker & Git",
+          category: "DevOps",
+          group: "Dev & Scripting",
+          desc: "Isolasi runtime terkontainerisasi, build yang dapat direproduksi, dan alur kerja Git.",
+          descEn: "Containerized runtime isolation, reproducible builds, and version-controlled workflows."
+        }
+      ],
+      projects: [
+        {
+          title: "TepatSasar SDG1 — Relational to NoSQL Migration",
+          titleEn: "TepatSasar SDG1 — Relational to NoSQL Migration",
+          category: "Data & DB",
+          year: "2025",
+          summary: "Migrasi dan perancangan ulang skema pendataan bantuan sosial dari basis data relasional ke model dokumen MongoDB untuk fleksibilitas atribut indikator kemiskinan.",
+          summaryEn: "Migrated and redesigned social aid tracking schemas from relational tables to MongoDB document models for flexible poverty-indicator attributes.",
+          architecture: "Mentransformasi tabel relasional multi-join menjadi dokumen terstruktur berbasis wilayah dan indikator rumah tangga menggunakan MongoDB Aggregation Framework dan compound indexing.",
+          architectureEn: "Transformed multi-join relational tables into region- and household-structured documents using MongoDB Aggregation Framework and compound indexing.",
+          impact: "Mengurangi latensi kueri rekapitulasi indikator hingga 42% serta mempermudah penambahan variabel survei dinamis tanpa migrasi skema kaku.",
+          impactEn: "Reduced indicator aggregation query latency by 42% while enabling dynamic survey variables without rigid schema migrations.",
+          tags: ["MongoDB", "PostgreSQL", "Data Modeling", "SDG 1"]
+        },
+        {
+          title: "Neo4j Graph AML & Transaction Anomaly Detection",
+          titleEn: "Neo4j Graph AML & Transaction Anomaly Detection",
+          category: "Data & DB",
+          year: "2025",
+          summary: "Pemodelan jaringan transaksi keuangan menggunakan Graph Database Neo4j untuk mendeteksi pola layering, circular transfer, dan klaster akun mencurigakan.",
+          summaryEn: "Modeled financial transaction networks with Neo4j Graph Database to detect layering patterns, circular transfers, and suspicious account clusters.",
+          architecture: "Memetakan entitas akun dan aliran transaksi ke dalam node dan directed relationship, dikombinasikan dengan kueri Cypher multi-hop dan algoritma centrality.",
+          architectureEn: "Mapped account entities and transfer flows into nodes and directed relationships, paired with multi-hop Cypher queries and centrality algorithms.",
+          impact: "Mampu menelusuri rantai transaksi berlapis dalam hitungan milidetik dibandingkan kueri rekursif SQL konvensional.",
+          impactEn: "Traversed multi-layered transaction chains in milliseconds compared to conventional recursive SQL joins.",
+          tags: ["Neo4j", "Cypher", "Python", "Graph Analytics"]
+        },
+        {
+          title: "CSSEKAI & MythsCS — CS 1.6 Xash Engine VPS Infra",
+          titleEn: "CSSEKAI & MythsCS — CS 1.6 Xash Engine VPS Infra",
+          category: "Systems & Infra",
+          year: "2021 — 2023",
+          summary: "Infrastruktur server Counter-Strike 1.6 berbasis Xash3D Engine yang berjalan 100% di atas VPS Linux Ubuntu sebagai pelopor di Asia Tenggara.",
+          summaryEn: "Counter-Strike 1.6 dedicated server infrastructure powered by Xash3D Engine running 100% on Ubuntu Linux VPS as a Southeast Asian pioneer.",
+          architecture: "Membangun lingkungan headless Linux Ubuntu untuk Xash3D dedicated server, mengoptimalkan parameter jaringan UDP, serta memodifikasi resource open-source Zombie Mod – Zombie Escape.",
+          architectureEn: "Built a headless Ubuntu Linux runtime for Xash3D dedicated servers, tuned UDP network parameters, and modified open-source Zombie Mod – Zombie Escape resources.",
+          impact: "Menjadi server CS 1.6 berbasis Xash Engine pertama di Asia Tenggara dengan rekor peak 32 pemain aktif secara bersamaan.",
+          impactEn: "Became the first Southeast Asia-based CS 1.6 server running Xash Engine, peaking at 32 concurrent active players.",
+          tags: ["Linux Ubuntu", "Xash3D", "Zombie Escape", "32 Peak Players"]
+        },
+        {
+          title: "Custom AMX Mod X (.amxx) & Minecraft Network Ops",
+          titleEn: "Custom AMX Mod X (.amxx) & Minecraft Network Ops",
+          category: "Scripting",
+          year: "2019 — Present",
+          summary: "Pengembangan plugin gameplay berkinerja tinggi berbasis Pawn (.amxx) untuk CS 1.6 serta pengelolaan jaringan server Minecraft komunitas sejak 2019.",
+          summaryEn: "High-performance Pawn (.amxx) gameplay plugin engineering for CS 1.6 alongside community Minecraft server network administration since 2019.",
+          architecture: "Menulis dan mengompilasi modul .amxx kustom untuk mekanik Zombie Escape, serta mengonfigurasi server Minecraft (Dev Asem Begete Network & Dev ISEKAISMP) dengan penyetelan JVM dan manajemen plugin.",
+          architectureEn: "Authored and compiled custom .amxx modules for Zombie Escape mechanics, and configured Minecraft servers (Dev Asem Begete Network & Dev ISEKAISMP) with JVM tuning and plugin orchestration.",
+          impact: "Menjaga stabilitas tickrate server komunitas dengan peak 15–18 pemain aktif di Minecraft dan 32 pemain di CS 1.6.",
+          impactEn: "Sustained stable server tickrates with 15–18 concurrent online players on Minecraft and 32 players on CS 1.6.",
+          tags: ["AMX Mod X", "Pawn (.amxx)", "PaperMC", "Server Ops"]
+        }
+      ],
+      timeline: [
+        {
+          period: "2021 — 2023",
+          role: "Developer Server Counter-Strike 1.6 Xash Engine",
+          roleEn: "Counter-Strike 1.6 Xash Engine Server Developer",
+          org: "CSSEKAI & MythsCS • 100% Linux Ubuntu VPS",
+          summary: "Merancang, mengoperasikan, dan mengembangkan infrastruktur server Counter-Strike 1.6 berbasis Xash3D Engine secara penuh di lingkungan Linux Ubuntu VPS.",
+          summaryEn: "Architected, operated, and developed Counter-Strike 1.6 dedicated servers powered by Xash3D Engine running 100% on Ubuntu Linux VPS.",
+          highlights: [
+            "Membuat dan mengelola plugin .amxx (AMX Mod X) secara mandiri untuk mekanik permainan dan utilitas server.",
+            "Memodifikasi file open-source dari Zombie Mod – Zombie Escape hingga berjalan stabil dan dapat dimainkan penuh oleh komunitas.",
+            "Mencapai peak count pemain aktif hingga 32 players secara bersamaan.",
+            "Menjadi server Counter-Strike 1.6 pertama yang berbasis di Asia Tenggara menggunakan Xash Engine."
+          ],
+          highlightsEn: [
+            "Authored and maintained custom .amxx (AMX Mod X) plugins for gameplay mechanics and server utilities.",
+            "Modified open-source Zombie Mod – Zombie Escape assets into a stable, fully playable community experience.",
+            "Reached a peak concurrent player count of 32 active players.",
+            "Pioneered the first Southeast Asia-based Counter-Strike 1.6 server powered by the Xash Engine."
+          ],
+          badges: ["100% Linux Ubuntu VPS", "First in SEA (Xash Engine)", "Peak: 32 Players", "AMX Mod X (.amxx)"]
+        },
+        {
+          period: "2019 — Present",
+          role: "Developer & Pengelola Minecraft Server",
+          roleEn: "Minecraft Server Developer & Administrator",
+          org: "Dev Asem Begete Network & Dev ISEKAISMP",
+          summary: "Mengembangkan konfigurasi server, manajemen plugin, optimasi performa runtime JVM, serta pemeliharaan komunitas pemain sejak tahun 2019.",
+          summaryEn: "Developed server configurations, plugin ecosystems, JVM runtime performance tuning, and player community operations since 2019.",
+          highlights: [
+            "Mengelola arsitektur gameplay dan sistem ekonomi/survival pada Dev Asem Begete Network dan Dev ISEKAISMP.",
+            "Mencapai peak count pemain online hingga 15–18 orang secara bersamaan dengan latensi stabil."
+          ],
+          highlightsEn: [
+            "Managed gameplay architecture and survival/economy systems across Dev Asem Begete Network and Dev ISEKAISMP.",
+            "Achieved peak concurrent online counts of 15–18 players with consistent low-latency tickrates."
+          ],
+          badges: ["Minecraft Infrastructure", "Peak: 15–18 Online Players", "Since 2019"]
+        },
+        {
+          period: "Present",
+          role: "Mahasiswa D-IV Teknologi Rekayasa Perangkat Lunak",
+          roleEn: "B.Appl.Sc. Student in Software Engineering Technology (D-IV TRPL)",
+          org: "Politeknik Negeri Madiun • Madiun, Jawa Timur",
+          summary: "Mendalami rekayasa perangkat lunak modern, perancangan basis data SQL & NoSQL (PostgreSQL, MySQL, MongoDB, Neo4j), algoritma, dan arsitektur sistem terdistribusi.",
+          summaryEn: "Specializing in modern software engineering, SQL & NoSQL database architecture (PostgreSQL, MySQL, MongoDB, Neo4j), algorithms, and distributed systems.",
+          highlights: [
+            "Fokus pada integrasi data multi-model, analisis graf transaksi, dan pengembangan aplikasi berbasis web & backend."
+          ],
+          highlightsEn: [
+            "Focused on multi-model data integration, transaction graph analytics, and web & backend application engineering."
+          ],
+          badges: ["D-IV TRPL PNM", "SQL & NoSQL", "Software Engineering"]
+        }
+      ]
+    };
+
+    /* ==========================================================================
+       DOM, STATE & TACTILE MICRO-SOUND ENGINE (WEB AUDIO API)
+       ========================================================================== */
+    const $ = (sel, root = document) => root.querySelector(sel);
+    const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+    let currentLang = "id";
+    let activePreset = "auto";
+    let soundEnabled = true;
+    let reduceMotionEnabled = false;
+    let highContrastEnabled = false;
+    let activeProjectFilter = "All";
+    let activeStackGroup = "All";
+    let toastTimer = null;
+
+    const GlassSoundEngine = {
+      ctx: null,
+      ensureContext() {
+        if (!soundEnabled) return null;
+        try {
+          if (!this.ctx) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) this.ctx = new AudioCtx();
+          }
+          if (this.ctx && this.ctx.state === "suspended") {
+            this.ctx.resume().catch(() => {});
+          }
+          return this.ctx;
+        } catch (e) {
+          return null;
+        }
+      },
+      playTone(freq, duration = 0.09, gainPeak = 0.028, delay = 0) {
+        const ctx = this.ensureContext();
+        if (!ctx) return;
+        try {
+          const now = ctx.currentTime + delay;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(freq, now);
+          osc.frequency.exponentialRampToValueAtTime(freq * 1.18, now + duration);
+
+          gain.gain.setValueAtTime(0.0001, now);
+          gain.gain.linearRampToValueAtTime(gainPeak, now + 0.012);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + duration + 0.015);
+        } catch (e) {}
+      },
+      tap() {
+        this.playTone(980, 0.065, 0.02, 0);
+      },
+      chime() {
+        this.playTone(1046.5, 0.11, 0.026, 0);
+        this.playTone(1567.98, 0.15, 0.02, 0.045);
+      },
+      easterEgg() {
+        this.playTone(880, 0.14, 0.028, 0);
+        this.playTone(1174.66, 0.16, 0.026, 0.06);
+        this.playTone(1567.98, 0.22, 0.024, 0.12);
+      }
+    };
+
+    /* ==========================================================================
+       UTILITY HELPERS
+       ========================================================================== */
+    function escapeHtml(str) {
+      return String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function showToast(message) {
+      const toast = $("#glassToast");
+      if (!toast) return;
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove("show");
+      }, 2800);
+    }
+
+    function copyTextFallback(text, successMsg) {
+      const fallbackCopy = () => {
+        try {
+          const ta = document.createElement("textarea");
+          ta.value = text;
+          ta.style.position = "fixed";
+          ta.style.opacity = "0";
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          document.body.removeChild(ta);
+          showToast(successMsg);
+        } catch (err) {
+          showToast("Email: " + text);
+        }
+      };
+
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => showToast(successMsg)).catch(fallbackCopy);
+      } else {
+        fallbackCopy();
+      }
+    }
+
+    function applyGlassFx() {
+      const fx = window.PORTFOLIO_DATA.glassFx || { blur: 24, brightness: 100 };
+      document.documentElement.style.setProperty("--glass-blur", `${fx.blur}px`);
+      document.documentElement.style.setProperty("--glass-brightness", `${fx.brightness}%`);
+    }
+
+    function getWibHour() {
+      try {
+        const hourStr = new Intl.DateTimeFormat("en-GB", {
+          timeZone: "Asia/Jakarta",
+          hour: "2-digit",
+          hour12: false
+        }).format(new Date());
+        return parseInt(hourStr, 10);
+      } catch (e) {
+        return new Date().getHours();
+      }
+    }
+
+    function applyGlassAtmosphere(preset) {
+      activePreset = preset;
+      let resolvedTheme = preset;
+      let wibLabel = "MANUAL";
+
+      if (preset === "auto") {
+        const hr = getWibHour();
+        if (hr >= 6 && hr < 17) {
+          resolvedTheme = "cyan";
+          wibLabel = currentLang === "id" ? "WIB SIANG" : "WIB DAY";
+        } else if (hr >= 17 && hr < 20) {
+          resolvedTheme = "sunset";
+          wibLabel = currentLang === "id" ? "WIB SENJA" : "WIB DUSK";
+        } else {
+          resolvedTheme = "emerald";
+          wibLabel = currentLang === "id" ? "WIB MALAM" : "WIB NIGHT";
+        }
+      }
+
+      if (resolvedTheme === "cyan") {
+        document.documentElement.removeAttribute("data-glass-theme");
+      } else {
+        document.documentElement.setAttribute("data-glass-theme", resolvedTheme);
+      }
+
+      if ($("#wibSyncStatusTag")) {
+        $("#wibSyncStatusTag").textContent = wibLabel;
+      }
+
+      $$("#glassPresetGrid .preset-chip").forEach((chip) => {
+        chip.classList.toggle("active", chip.getAttribute("data-preset") === preset);
+      });
+    }
+
+    function setLanguage(lang) {
+      currentLang = lang === "en" ? "en" : "id";
+      document.documentElement.lang = currentLang;
+
+      $$(".lang-opt-btn").forEach((btn) => {
+        btn.classList.toggle("active", btn.getAttribute("data-lang") === currentLang);
+      });
+
+      const dict = UI_STRINGS[currentLang];
+      $$("[data-i18n]").forEach((el) => {
+        const key = el.getAttribute("data-i18n");
+        if (dict[key]) {
+          el.textContent = dict[key];
+        }
+      });
+
+      applyGlassAtmosphere(activePreset);
+      renderAll();
+    }
+
+    /* ==========================================================================
+       DYNAMIC RENDERERS (PROFILE, TECH STACK, PROJECTS, TIMELINE)
+       ========================================================================== */
+    function renderProfile() {
+      const p = window.PORTFOLIO_DATA.profile;
+      const isEn = currentLang === "en";
+      if ($("#navBrandText")) $("#navBrandText").textContent = p.brand;
+      if ($("#heroName")) $("#heroName").textContent = p.name;
+      if ($("#heroHandle")) $("#heroHandle").textContent = p.handle;
+      if ($("#heroRole")) $("#heroRole").textContent = isEn ? (p.roleEn || p.role) : p.role;
+      if ($("#heroStatusText")) $("#heroStatusText").textContent = isEn ? (p.statusEn || p.status) : p.status;
+      if ($("#heroBio")) $("#heroBio").textContent = isEn ? (p.bioEn || p.bio) : p.bio;
+      if ($("#telemetryEducation")) $("#telemetryEducation").textContent = p.education;
+      if ($("#telemetryLocation")) $("#telemetryLocation").textContent = p.location;
+      if ($("#telemetryStack")) $("#telemetryStack").textContent = p.activeStackSummary;
+      if ($("#contactEmailLabel")) $("#contactEmailLabel").textContent = p.email;
+      if ($("#contactGithubLink")) $("#contactGithubLink").href = p.githubUrl;
+      if ($("#footerText")) {
+        $("#footerText").textContent = `© 2026 ${p.name} (${p.handle}) — Built with Spatial Liquid Glass Architecture.`;
+      }
+    }
+
+    function renderStack() {
+      const container = $("#stackMatrix");
+      const descBar = $("#stackDescriptionBar");
+      if (!container) return;
+
+      const isEn = currentLang === "en";
+      const allItems = window.PORTFOLIO_DATA.stack || [];
+      const items =
+        activeStackGroup === "All"
+          ? allItems
+          : allItems.filter((item) => item.group === activeStackGroup);
+
+      container.innerHTML = items
+        .map(
+          (item, idx) => `
+          <button type="button" class="stack-pill ${idx === 0 ? "active" : ""}" data-stack-idx="${idx}">
+            <span>${escapeHtml(item.name)}</span>
+            <span class="stack-cat-tag">${escapeHtml(item.category)}</span>
+          </button>
+        `
+        )
+        .join("");
+
+      const renderDesc = (item) => {
+        if (!item || !descBar) return;
+        const text = isEn ? (item.descEn || item.desc) : item.desc;
+        descBar.innerHTML = `
+          <span><strong style="color: var(--accent-primary);">[${escapeHtml(item.name)}]</strong> — ${escapeHtml(text)}</span>
+          <span style="color: var(--text-muted);">CATEGORY // ${escapeHtml(item.category.toUpperCase())}</span>
+        `;
+      };
+
+      if (items[0]) renderDesc(items[0]);
+
+      $$(".stack-pill", container).forEach((btn) => {
+        const activate = () => {
+          const idx = Number(btn.getAttribute("data-stack-idx"));
+          const item = items[idx];
+          if (!item) return;
+          $$(".stack-pill", container).forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          renderDesc(item);
+        };
+        btn.addEventListener("mouseenter", activate);
+        btn.addEventListener("click", () => {
+          GlassSoundEngine.tap();
+          activate();
+        });
+      });
+    }
+
+    function renderProjects() {
+      const grid = $("#projectsGrid");
+      if (!grid) return;
+
+      const isEn = currentLang === "en";
+      const inspectLabel = UI_STRINGS[currentLang].inspect_arch;
+      const allProjects = window.PORTFOLIO_DATA.projects || [];
+      const filtered =
+        activeProjectFilter === "All"
+          ? allProjects
+          : allProjects.filter((p) => p.category === activeProjectFilter);
+
+      grid.innerHTML = filtered
+        .map((proj) => {
+          const realIdx = allProjects.indexOf(proj);
+          const title = isEn ? (proj.titleEn || proj.title) : proj.title;
+          const summary = isEn ? (proj.summaryEn || proj.summary) : proj.summary;
+          const tagsHtml = (proj.tags || [])
+            .map((t) => `<span class="glass-tag">${escapeHtml(t)}</span>`)
+            .join("");
+          return `
+            <article class="liquid-glass project-card reveal-on-scroll" data-tilt data-proj-idx="${realIdx}" tabindex="0" role="button" aria-label="Open case study ${escapeHtml(title)}">
+              <div>
+                <div class="project-top-meta">
+                  <span class="project-cat-pill">${escapeHtml(proj.category)}</span>
+                  <span class="project-year">${escapeHtml(proj.year)}</span>
+                </div>
+                <h3 class="project-title">${escapeHtml(title)}</h3>
+                <p class="project-summary">${escapeHtml(summary)}</p>
+              </div>
+              <div>
+                <div class="tag-row" style="margin-bottom: 14px;">${tagsHtml}</div>
+                <div class="project-footer">
+                  <span class="inspect-label">${escapeHtml(inspectLabel)}</span>
+                </div>
+              </div>
+            </article>
+          `;
+        })
+        .join("");
+
+      $$(".project-card", grid).forEach((card) => {
+        const open = () => {
+          const idx = Number(card.getAttribute("data-proj-idx"));
+          GlassSoundEngine.chime();
+          openCaseStudyModal(idx);
+        };
+        card.addEventListener("click", open);
+        card.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            open();
+          }
+        });
+      });
+
+      initGlassRefractionAndTilt();
+      initScrollReveal();
+    }
+
+    function openCaseStudyModal(idx) {
+      const proj = (window.PORTFOLIO_DATA.projects || [])[idx];
+      const modal = $("#caseStudyModal");
+      if (!proj || !modal) return;
+
+      const isEn = currentLang === "en";
+      if ($("#modalProjCat")) $("#modalProjCat").textContent = proj.category;
+      if ($("#modalProjTitle")) $("#modalProjTitle").textContent = isEn ? (proj.titleEn || proj.title) : proj.title;
+      if ($("#modalProjYear")) $("#modalProjYear").textContent = proj.year;
+      if ($("#modalProjSummary")) $("#modalProjSummary").textContent = isEn ? (proj.summaryEn || proj.summary) : proj.summary;
+      if ($("#modalProjArch")) $("#modalProjArch").textContent = isEn ? (proj.architectureEn || proj.architecture) : proj.architecture;
+      if ($("#modalProjImpact")) $("#modalProjImpact").textContent = isEn ? (proj.impactEn || proj.impact) : proj.impact;
+      if ($("#modalProjTags")) {
+        $("#modalProjTags").innerHTML = (proj.tags || [])
+          .map((t) => `<span class="glass-tag">${escapeHtml(t)}</span>`)
+          .join("");
+      }
+
+      modal.classList.add("open");
+    }
+
+    function closeCaseStudyModal() {
+      const modal = $("#caseStudyModal");
+      if (modal) modal.classList.remove("open");
+    }
+
+    function renderTimeline() {
+      const container = $("#timelineContainer");
+      if (!container) return;
+
+      const isEn = currentLang === "en";
+      const entries = window.PORTFOLIO_DATA.timeline || [];
+      container.innerHTML = entries
+        .map((item) => {
+          const role = isEn ? (item.roleEn || item.role) : item.role;
+          const summary = isEn ? (item.summaryEn || item.summary) : item.summary;
+          const highlightsList = isEn ? (item.highlightsEn || item.highlights || []) : (item.highlights || []);
+          const highlightsHtml = highlightsList.length
+            ? `<ul class="timeline-highlights">${highlightsList
+                .map((h) => `<li>${escapeHtml(h)}</li>`)
+                .join("")}</ul>`
+            : "";
+          const badgesHtml = (item.badges || []).length
+            ? `<div class="tag-row" style="margin-top: 14px;">${item.badges
+                .map((b) => `<span class="glass-tag">${escapeHtml(b)}</span>`)
+                .join("")}</div>`
+            : "";
+
+          return `
+            <div class="timeline-entry">
+              <div class="timeline-dot"></div>
+              <div class="liquid-glass timeline-card reveal-on-scroll" data-tilt>
+                <div class="timeline-header">
+                  <h3 class="card-heading" style="margin-bottom: 0;">${escapeHtml(role)}</h3>
+                  <span class="timeline-period">${escapeHtml(item.period)}</span>
+                </div>
+                <div class="timeline-org">${escapeHtml(item.org)}</div>
+                <p class="card-body-text">${escapeHtml(summary)}</p>
+                ${highlightsHtml}
+                ${badgesHtml}
+              </div>
+            </div>
+          `;
+        })
+        .join("");
+
+      initGlassRefractionAndTilt();
+      initScrollReveal();
+    }
+
+    /* ==========================================================================
+       SPATIAL INTERACTIONS (CLOCK, TILT, GYROSCOPE, RIPPLE, MAGNETIC, PARALLAX)
+       ========================================================================== */
+    function startLiveWibClock() {
+      const el = $("#liveWibClock");
+      if (!el) return;
+
+      let lastHour = getWibHour();
+
+      const updateClock = () => {
+        try {
+          const formatted = new Intl.DateTimeFormat("en-GB", {
+            timeZone: "Asia/Jakarta",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: false
+          }).format(new Date());
+          el.textContent = `${formatted} WIB`;
+        } catch (e) {
+          const now = new Date();
+          el.textContent = now.toTimeString().slice(0, 8) + " WIB";
+        }
+
+        const currentHour = getWibHour();
+        if (currentHour !== lastHour) {
+          lastHour = currentHour;
+          if (activePreset === "auto") applyGlassAtmosphere("auto");
+        }
+      };
+
+      updateClock();
+      setInterval(updateClock, 1000);
+    }
+
+    function initGlassRefractionAndTilt() {
+      const isTouch = window.matchMedia("(pointer: coarse)").matches;
+      $$(".liquid-glass").forEach((card) => {
+        if (card.dataset.tiltBound === "1") return;
+        card.dataset.tiltBound = "1";
+
+        card.addEventListener("mousemove", (e) => {
+          const rect = card.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          card.style.setProperty("--mx", `${x}px`);
+          card.style.setProperty("--my", `${y}px`);
+
+          if (!isTouch && !reduceMotionEnabled && card.hasAttribute("data-tilt")) {
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            const rotateX = ((y - centerY) / centerY) * -2.2;
+            const rotateY = ((x - centerX) / centerX) * 2.2;
+            card.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateY(-2px)`;
+          }
+        });
+
+        card.addEventListener("mouseleave", () => {
+          if (card.hasAttribute("data-tilt")) {
+            card.style.transform = "";
+          }
+        });
+      });
+    }
+
+    function initMobileGyroscopeRefraction() {
+      if (!("DeviceOrientationEvent" in window)) return;
+      window.addEventListener(
+        "deviceorientation",
+        (e) => {
+          if (reduceMotionEnabled || e.gamma === null || e.beta === null) return;
+          const normX = Math.max(-45, Math.min(45, e.gamma)) / 45;
+          const normY = Math.max(-45, Math.min(45, e.beta - 35)) / 45;
+          const pctX = (50 + normX * 42).toFixed(1) + "%";
+          const pctY = (50 + normY * 42).toFixed(1) + "%";
+
+          $$(".liquid-glass").forEach((card) => {
+            card.style.setProperty("--mx", pctX);
+            card.style.setProperty("--my", pctY);
+          });
+        },
+        { passive: true }
+      );
+    }
+
+    function initLiquidClickRipples() {
+      document.addEventListener("pointerdown", (e) => {
+        if (reduceMotionEnabled) return;
+        const target = e.target.closest(
+          ".liquid-glass, .btn-primary-glass, .btn-glass, .filter-btn, .stack-tab-btn, .stack-pill, .nav-cta, .nav-icon-btn, .preset-chip"
+        );
+        if (!target) return;
+
+        const rect = target.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height) * 1.65;
+        const ripple = document.createElement("span");
+        ripple.className = "liquid-ripple-wave";
+        ripple.style.width = `${size}px`;
+        ripple.style.height = `${size}px`;
+        ripple.style.left = `${e.clientX - rect.left}px`;
+        ripple.style.top = `${e.clientY - rect.top}px`;
+
+        target.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 720);
+      });
+    }
+
+    function initMagneticButtons() {
+      if (window.matchMedia("(pointer: coarse)").matches) return;
+      $$(".magnetic-btn").forEach((btn) => {
+        btn.addEventListener("mousemove", (e) => {
+          if (reduceMotionEnabled) return;
+          const rect = btn.getBoundingClientRect();
+          const dx = e.clientX - (rect.left + rect.width / 2);
+          const dy = e.clientY - (rect.top + rect.height / 2);
+          btn.style.transform = `translate3d(${(dx * 0.2).toFixed(1)}px, ${(dy * 0.2).toFixed(1)}px, 0) scale(1.02)`;
+        });
+        btn.addEventListener("mouseleave", () => {
+          btn.style.transform = "";
+        });
+      });
+    }
+
+    function initDepthBlobParallax() {
+      const layers = $$(".blob-parallax-layer");
+      if (!layers.length) return;
+
+      const onScroll = () => {
+        if (reduceMotionEnabled) {
+          layers.forEach((l) => (l.style.transform = ""));
+          return;
+        }
+        const y = window.scrollY || 0;
+        layers.forEach((layer) => {
+          const speed = parseFloat(layer.getAttribute("data-parallax-speed") || "0");
+          layer.style.transform = `translate3d(0, ${(y * speed).toFixed(1)}px, 0)`;
+        });
+      };
+
+      window.addEventListener("scroll", onScroll, { passive: true });
+      onScroll();
+    }
+
+    function initScrollSpyAndChapterBadge() {
+      const links = $$(".nav-link");
+      const drawerLinks = $$(".mobile-drawer-link");
+      const chapterBadge = $("#navChapterBadge");
+      const sectionIds = ["about", "stack", "projects", "journey", "contact"];
+
+      const chapterMap = {
+        "": "00 // OVERVIEW",
+        about: "01 // PHILOSOPHY",
+        stack: "01.B // TECH STACK",
+        projects: "02 // PROJECTS",
+        journey: "03 // TRACK RECORD",
+        contact: "04 // CONTACT"
+      };
+
+      const applyActiveSection = (currentId) => {
+        if (chapterBadge) {
+          chapterBadge.textContent = chapterMap[currentId] || "00 // OVERVIEW";
+        }
+
+        links.forEach((link) => {
+          const href = link.getAttribute("href");
+          link.classList.toggle("active", href === `#${currentId}`);
+        });
+
+        drawerLinks.forEach((link) => {
+          const href = link.getAttribute("href");
+          link.classList.toggle("active", href === `#${currentId}`);
+        });
+      };
+
+      const updateActiveNav = () => {
+        let currentId = "";
+
+        for (const id of sectionIds) {
+          const sec = document.getElementById(id);
+          if (sec) {
+            const rectTop = sec.getBoundingClientRect().top;
+            if (rectTop <= 165) {
+              currentId = id;
+            }
+          }
+        }
+
+        if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 40) {
+          currentId = "contact";
+        }
+
+        applyActiveSection(currentId);
+      };
+
+      links.forEach((link) => {
+        link.addEventListener("click", () => {
+          GlassSoundEngine.tap();
+          const targetId = (link.getAttribute("href") || "").replace("#", "");
+          if (targetId) applyActiveSection(targetId);
+        });
+      });
+
+      window.addEventListener("scroll", updateActiveNav, { passive: true });
+      updateActiveNav();
+    }
+
+    function initTripleClickEasterEgg() {
+      const handleEl = $("#heroHandle");
+      const eggModal = $("#easterEggModal");
+      const closeBtn = $("#closeEggModalBtn");
+      if (!handleEl || !eggModal) return;
+
+      let clickTimes = [];
+      handleEl.addEventListener("click", () => {
+        const now = Date.now();
+        clickTimes = clickTimes.filter((t) => now - t < 1100);
+        clickTimes.push(now);
+
+        if (clickTimes.length >= 3) {
+          clickTimes = [];
+          GlassSoundEngine.easterEgg();
+
+          $$(".liquid-glass").forEach((card) => {
+            card.classList.remove("refraction-burst");
+            void card.offsetWidth;
+            card.classList.add("refraction-burst");
+          });
+
+          eggModal.classList.add("open");
+        }
+      });
+
+      if (closeBtn) {
+        closeBtn.addEventListener("click", () => eggModal.classList.remove("open"));
+      }
+      eggModal.addEventListener("click", (e) => {
+        if (e.target === eggModal) eggModal.classList.remove("open");
+      });
+    }
+
+    function initScrollReveal() {
+      const targets = $$(".reveal-on-scroll");
+      if (!("IntersectionObserver" in window)) {
+        targets.forEach((el) => el.classList.add("is-visible"));
+        return;
+      }
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("is-visible");
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.1, rootMargin: "0px 0px -24px 0px" }
+      );
+
+      targets.forEach((el) => {
+        if (!el.classList.contains("is-visible")) {
+          observer.observe(el);
+        }
+      });
+    }
+
+    function initScrollProgressAndBackToTop() {
+      const progressBar = $("#scrollProgressBar");
+      const topBtn = $("#backToTopBtn");
+
+      const onScroll = () => {
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        const docHeight =
+          document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        if (progressBar) {
+          const pct = docHeight > 0 ? Math.min(100, Math.max(0, (scrollTop / docHeight) * 100)) : 0;
+          progressBar.style.width = `${pct.toFixed(1)}%`;
+        }
+        if (topBtn) {
+          topBtn.classList.toggle("visible", scrollTop > 400);
+        }
+      };
+
+      window.addEventListener("scroll", onScroll, { passive: true });
+      onScroll();
+
+      if (topBtn) {
+        topBtn.addEventListener("click", () => {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+      }
+    }
+
+    function initAmbientCursorSpotlight() {
+      const spotlight = $("#cursorSpotlight");
+      if (!spotlight || window.matchMedia("(pointer: coarse)").matches) return;
+
+      window.addEventListener(
+        "mousemove",
+        (e) => {
+          spotlight.style.left = `${e.clientX}px`;
+          spotlight.style.top = `${e.clientY}px`;
+        },
+        { passive: true }
+      );
+    }
+
+    function renderAll() {
+      renderProfile();
+      renderStack();
+      renderProjects();
+      renderTimeline();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      applyGlassFx();
+      applyGlassAtmosphere("auto");
+      setLanguage("id");
+      startLiveWibClock();
+      initGlassRefractionAndTilt();
+      initMobileGyroscopeRefraction();
+      initLiquidClickRipples();
+      initMagneticButtons();
+      initDepthBlobParallax();
+      initScrollSpyAndChapterBadge();
+      initScrollReveal();
+      initScrollProgressAndBackToTop();
+      initAmbientCursorSpotlight();
+      initTripleClickEasterEgg();
+
+      // Bilingual Switcher (ID / EN)
+      $$(".lang-opt-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const lang = btn.getAttribute("data-lang") || "id";
+          if (lang === currentLang) return;
+          GlassSoundEngine.chime();
+          setLanguage(lang);
+          showToast(UI_STRINGS[currentLang].toast_lang_switched);
+        });
+      });
+
+      // Glass Atmosphere & Accessibility Popover Controls
+      const atmBtn = $("#glassAtmosphereBtn");
+      const atmPopover = $("#glassAtmospherePopover");
+      if (atmBtn && atmPopover) {
+        atmBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          GlassSoundEngine.tap();
+          const willOpen = !atmPopover.classList.contains("open");
+          atmPopover.classList.toggle("open", willOpen);
+          atmBtn.classList.toggle("active", willOpen);
+          atmBtn.setAttribute("aria-expanded", String(willOpen));
+        });
+
+        document.addEventListener("click", (e) => {
+          if (!atmPopover.contains(e.target) && e.target !== atmBtn) {
+            atmPopover.classList.remove("open");
+            atmBtn.classList.remove("active");
+            atmBtn.setAttribute("aria-expanded", "false");
+          }
+        });
+      }
+
+      $$("#glassPresetGrid .preset-chip").forEach((chip) => {
+        chip.addEventListener("click", () => {
+          const preset = chip.getAttribute("data-preset") || "auto";
+          GlassSoundEngine.chime();
+          applyGlassAtmosphere(preset);
+        });
+      });
+
+      // Accessibility Toggle Switches
+      const bindSwitch = (rowId, onToggle) => {
+        const row = $(rowId);
+        if (!row) return;
+        const toggle = () => {
+          const next = !row.classList.contains("on");
+          row.classList.toggle("on", next);
+          row.setAttribute("aria-checked", String(next));
+          onToggle(next);
+        };
+        row.addEventListener("click", toggle);
+        row.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            toggle();
+          }
+        });
+      };
+
+      bindSwitch("#toggleSoundRow", (enabled) => {
+        soundEnabled = enabled;
+        if (enabled) GlassSoundEngine.chime();
+      });
+
+      bindSwitch("#toggleMotionRow", (enabled) => {
+        reduceMotionEnabled = enabled;
+        document.documentElement.classList.toggle("reduce-motion", enabled);
+        GlassSoundEngine.tap();
+      });
+
+      bindSwitch("#toggleContrastRow", (enabled) => {
+        highContrastEnabled = enabled;
+        document.documentElement.classList.toggle("high-contrast", enabled);
+        GlassSoundEngine.tap();
+      });
+
+      // Mobile Glass Navigation Drawer
+      const mobileDrawerBtn = $("#mobileDrawerBtn");
+      const mobileNavDrawer = $("#mobileNavDrawer");
+      const closeMobileDrawerBtn = $("#closeMobileDrawerBtn");
+      const closeDrawer = () => {
+        if (mobileNavDrawer) mobileNavDrawer.classList.remove("open");
+        if (mobileDrawerBtn) mobileDrawerBtn.setAttribute("aria-expanded", "false");
+      };
+
+      if (mobileDrawerBtn && mobileNavDrawer) {
+        mobileDrawerBtn.addEventListener("click", () => {
+          GlassSoundEngine.tap();
+          mobileNavDrawer.classList.add("open");
+          mobileDrawerBtn.setAttribute("aria-expanded", "true");
+        });
+        if (closeMobileDrawerBtn) {
+          closeMobileDrawerBtn.addEventListener("click", closeDrawer);
+        }
+        mobileNavDrawer.addEventListener("click", (e) => {
+          if (e.target === mobileNavDrawer) closeDrawer();
+        });
+        $$(".mobile-drawer-link", mobileNavDrawer).forEach((link) => {
+          link.addEventListener("click", () => {
+            GlassSoundEngine.tap();
+            closeDrawer();
+          });
+        });
+      }
+
+      // Copy Email Buttons & Keyboard Shortcut [C]
+      const handleCopyEmail = () => {
+        const email = window.PORTFOLIO_DATA.profile.email;
+        GlassSoundEngine.chime();
+        copyTextFallback(email, `${UI_STRINGS[currentLang].toast_email_copied}${email}`);
+      };
+      if ($("#heroCopyEmailBtn")) $("#heroCopyEmailBtn").addEventListener("click", handleCopyEmail);
+      if ($("#contactCopyEmailBtn")) $("#contactCopyEmailBtn").addEventListener("click", handleCopyEmail);
+
+      // Telemetry Mini-Node Ping Buttons
+      $$(".mini-node-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          GlassSoundEngine.tap();
+          $$(".mini-node-btn").forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          const msg = btn.getAttribute(currentLang === "en" ? "data-ping-en" : "data-ping-id");
+          if (msg) showToast(msg);
+        });
+      });
+
+      // Tech Stack Category Filter Tabs
+      const stackFilterBar = $("#stackFilterBar");
+      if (stackFilterBar) {
+        $$(".stack-tab-btn", stackFilterBar).forEach((btn) => {
+          btn.addEventListener("click", () => {
+            GlassSoundEngine.tap();
+            $$(".stack-tab-btn", stackFilterBar).forEach((b) => b.classList.remove("active"));
+            btn.classList.add("active");
+            activeStackGroup = btn.getAttribute("data-stack-group") || "All";
+            renderStack();
+          });
+        });
+      }
+
+      // Project Filter Pills
+      const filterBar = $("#projectFilterBar");
+      if (filterBar) {
+        $$(".filter-btn", filterBar).forEach((btn) => {
+          btn.addEventListener("click", () => {
+            GlassSoundEngine.tap();
+            $$(".filter-btn", filterBar).forEach((b) => b.classList.remove("active"));
+            btn.classList.add("active");
+            activeProjectFilter = btn.getAttribute("data-filter") || "All";
+            renderProjects();
+          });
+        });
+      }
+
+      // Case Study Modal Controls
+      if ($("#closeCaseModalBtn")) {
+        $("#closeCaseModalBtn").addEventListener("click", closeCaseStudyModal);
+      }
+      if ($("#caseStudyModal")) {
+        $("#caseStudyModal").addEventListener("click", (e) => {
+          if (e.target === $("#caseStudyModal")) closeCaseStudyModal();
+        });
+      }
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          closeCaseStudyModal();
+          closeDrawer();
+          if (atmPopover) atmPopover.classList.remove("open");
+          if ($("#easterEggModal")) $("#easterEggModal").classList.remove("open");
+        }
+        if (
+          (e.key === "c" || e.key === "C") &&
+          !e.ctrlKey &&
+          !e.metaKey &&
+          !e.altKey &&
+          !["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName)
+        ) {
+          handleCopyEmail();
+        }
+      });
+    });
+  </script>
+</body>
+</html>
